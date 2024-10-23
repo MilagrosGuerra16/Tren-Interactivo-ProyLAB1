@@ -1,4 +1,4 @@
-Descripción del entregable:
+Descripcion del entregable
 En esta sección se encuentran los archivos PDF y un enlace a YouTube relacionados con los documentos del proyecto.
 
 Instrucciones de uso:
