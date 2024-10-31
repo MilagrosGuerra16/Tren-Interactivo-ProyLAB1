@@ -1,0 +1,92 @@
+Código para controlar motor y sensores
+#include <AFMotor.h>  
+
+// Definir pines y variables 
+
+int infrarrojo = A0;   
+
+int valor = 0; 
+
+ 
+
+// Establecer límites según tus lecturas 
+
+int limiteNegro = 1000;   
+
+int limiteBlanco = 999;    
+
+// Definir motores conectados a M3 y M4 
+
+AF_DCMotor motorIzquierdo(3, MOTOR34_1KHZ);  
+
+AF_DCMotor motorDerecho(4, MOTOR34_1KHZ); 
+
+ 
+
+void setup() { 
+
+  Serial.begin(9600); 
+
+  pinMode(infrarrojo, INPUT); 
+
+   
+
+  // Detener los motores al inicio 
+
+  motorIzquierdo.setSpeed(0); 
+
+  motorDerecho.setSpeed(0); 
+
+} 
+
+ 
+
+void loop() { 
+
+  valor = analogRead(infrarrojo);   
+
+  Serial.print("Valor del Sensor: ");  
+
+  Serial.println(valor);  
+
+ 
+
+  // Detección de superficie 
+
+  if (valor > limiteNegro) {     Serial.println("Superficie Negra Detectada"); // Negro 
+
+     
+
+    // Arrancar los motores 
+
+    motorIzquierdo.run(FORWARD); 
+
+    motorDerecho.run(FORWARD); 
+
+     
+
+    // Establecer la velocidad 
+
+    motorIzquierdo.setSpeed(255);   
+
+    motorDerecho.setSpeed(255); 
+
+  } else if (valor < limiteBlanco) { / 
+
+    Serial.println("Superficie Blanca Detectada"); // Blanco 
+
+ 
+
+    // Detener los motores 
+
+    motorIzquierdo.run(RELEASE); 
+
+    motorDerecho.run(RELEASE); 
+
+  }  
+
+ 
+
+  delay(500);   
+
+} 
