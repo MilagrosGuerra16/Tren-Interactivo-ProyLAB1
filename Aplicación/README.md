@@ -10,5 +10,5 @@ El desarrollo de la app requiere la herramienta App Inventor, donde se utilizar�
 # Archivos principales
 El entregable se organiza en dos carpetas:
 
-- App Inventor: Contiene el archivo APK descargable y el c처digo fuente de la aplicaci처n.
-- C처digo App: Incluye la codificaci처n completa de la aplicaci처n para su revisi처n o modificaci처n.
+- App Inventor: Contiene el archivo APK descargable.
+- C처digo App: Incluye el enlace para descarfar desde app inventor y modificar el archivo.
