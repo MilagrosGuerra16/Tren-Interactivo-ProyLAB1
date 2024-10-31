@@ -1,8 +1,8 @@
 # Descripcion del entregable
-En esta sección se encuentran los archivos relacionados con la aplicación que controla el tren. Esta app permite reproducir música, seleccionar los diseños de la matriz LED y tomar asistencia de manera automatizada.
+En esta sección se encuentra el informe técnico del proyecto,el cual describe la estructura, los componentes electrónicos, los lenguajes de programación e ideas generales.
 
 # Intrucciones para uso
-Descargar archivo para visualizar el contenido.
+Para visualizar el documento, simplemente descarguelo.
 
 # Archivos principales
-El entregable del informe técnico consta de un solo archivo, el cual documenta exhaustivamente el proyecto, describiendo la estructura, los componentes electrónicos, lenguaje de programación e ideaas generales.
+El entregable contiene un archivo PDF. Este documento contiene toda la información esencial del proyecto.
