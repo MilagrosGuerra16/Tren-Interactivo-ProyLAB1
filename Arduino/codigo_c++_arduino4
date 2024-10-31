@@ -1,0 +1,42 @@
+Código para el dispensador de agua
+const int trigPin = 9;
+const int echoPin = 10;
+const int pinBomba = 8;
+const int distanciaActivacion = 10;
+
+void setup() {
+  // Configuración de pines
+  pinMode(trigPin, OUTPUT);  
+  pinMode(echoPin, INPUT);    
+  pinMode(pinBomba, OUTPUT);  
+  
+  digitalWrite(pinBomba, LOW);
+  
+
+  Serial.begin(9600);
+}
+
+void loop() {
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+  long duracion = pulseIn(echoPin, HIGH);
+  int distancia = duracion * 0.034 / 2; // Velocidad del sonido (cm/µs)
+
+
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+  // Si la distancia es menor a la distancia de activación, encendemos la bomba
+  if (distancia <= distanciaActivacion) {
+    digitalWrite(pinBomba, HIGH); // Activa la bomba
+    delay(2000);                  // Mantiene la bomba encendida por 2 segundos
+    digitalWrite(pinBomba, LOW);  // Apaga la bomba
+  }
+  
+  delay(500); 
+}
