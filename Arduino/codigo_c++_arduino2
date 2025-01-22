@@ -1,169 +1,61 @@
-* Código para conexion serial y RFID
-#include <SPI.h> 
-
-#include <MFRC522.h> 
-
-  
-
-#define SS_PIN 10 
-
-#define RST_PIN 9 
-
-MFRC522 rfid(SS_PIN, RST_PIN); 
-
-  
-
-const int MAX_CARDS = 10;  // Máximo número de tarjetas que puedes almacenar 
-
-String tarjetasLeidas[MAX_CARDS];  // Arreglo para almacenar los códigos de tarjetas leídos 
-
-int tarjetasLeidasCount = 0;  // Contador de tarjetas leídas 
-
-  
-
-void setup() { 
-
-  Serial.begin(9600);   // Inicia el monitor serial 
-
-  SPI.begin();          // Inicia el bus SPI 
-
-  rfid.PCD_Init();      // Inicia el lector RFID 
-
-  limpiarTarjetasLeidas(); // Limpia la lista al inicio 
-
-} 
-
-  
-
-void loop() { 
-
-  // Verificar si se recibió un comando de la app 
-
-  if (Serial.available() > 0) { 
-
-    String comando = Serial.readStringUntil('\n');  // Lee el comando enviado desde App Inventor 
-
-    comando.trim();  // Elimina espacios en blanco adicionales 
-
-  
-
-    if (comando == "RESET") { 
-
-      limpiarTarjetasLeidas();  // Reinicia la lista de tarjetas leídas 
-
-      
-
-    } 
-
-  } 
-
-  
-
-  // Verificar si se ha detectado una nueva tarjeta RFID 
-
-  if (rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial()) { 
-
-    String codigo = ""; 
-
-    for (byte i = 0; i < rfid.uid.size; i++) { 
-
-      codigo += String(rfid.uid.uidByte[i], HEX); 
-
-    } 
-
-  
-
-    // Verificar si el código ya ha sido leído antes 
-
-    if (!tarjetaYaLeida(codigo)) { 
-
-      // Guardar el código de la tarjeta si no ha sido leída antes 
-
-      guardarTarjeta(codigo); 
-
-  
-
-      // Verifica el código y envía el nombre correspondiente 
-
-      if (codigo == "8337ec") { 
-
-        Serial.println("Flor Guerra"); // Envío de nombre por Bluetooth 
-
-      } else if (codigo == "c677cc2b") { 
-
-        Serial.println("Anto Astudillo"); // Envío de nombre por Bluetooth 
-
-      } else { 
-
-        Serial.println(codigo); // Para códigos no reconocidos 
-
-      } 
-
-    } 
-
-  
-
-    delay(1000);  // Para evitar lecturas múltiples de la misma tarjeta 
-
-    rfid.PICC_HaltA();  // Detener la comunicación 
-
-  } 
-
-} 
-
-  
-
-// Función para verificar si la tarjeta ya fue leída 
-
-bool tarjetaYaLeida(String codigo) { 
-
-  for (int i = 0; i < tarjetasLeidasCount; i++) { 
-
-    if (tarjetasLeidas[i] == codigo) { 
-
-      return true;  // La tarjeta ya fue pasada 
-
-    } 
-
-  } 
-
-  return false;  // La tarjeta no ha sido pasada 
-
-} 
-
-  
-
-// Función para guardar el código de la tarjeta leída 
-
-void guardarTarjeta(String codigo) { 
-
-  if (tarjetasLeidasCount < MAX_CARDS) { 
-
-    tarjetasLeidas[tarjetasLeidasCount] = codigo; 
-
-    tarjetasLeidasCount++; 
-
-  } else { 
-
-    Serial.println("Memoria llena. No se pueden almacenar más tarjetas."); 
-
-  } 
-
-} 
-
-  
-
-// Función para limpiar la lista de tarjetas leídas 
-
-void limpiarTarjetasLeidas() { 
-
-  tarjetasLeidasCount = 0;  // Restablece el contador de tarjetas 
-
-  for (int i = 0; i < MAX_CARDS; i++) { 
-
-    tarjetasLeidas[i] = "";  // Vacía cada elemento de la lista 
-
-  } 
+//CODIGO PARA RFID Y CONEXION SERIAL
+#include <Wire.h>
+#include <SPI.h>
+#include <MFRC522.h>
+ 
+#define SS_PIN 10
+#define RST_PIN 9
+ 
+MFRC522 rfid(SS_PIN, RST_PIN);
+ 
+void setup() {
+  Wire.begin();
+  Serial.begin(9600);
+  SPI.begin();          // Inicia el bus SPI
+  rfid.PCD_Init();      // Inicializa el RFID
+}
+ 
+void loop() {
+  // Comprueba si hay una tarjeta presente
+  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) {
+    delay(500); // Evitar múltiples lecturas de la misma tarjeta
+    return;
+  }
+ 
+  // Leer el UID de la tarjeta
+  String codigo = "";
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    codigo += String(rfid.uid.uidByte[i], HEX);
+    if (i != rfid.uid.size - 1) codigo += ":"; // Agregar separador
+  }
+ 
+  // Convertir el UID a minúsculas para evitar problemas de comparación
+  codigo.toLowerCase();
+ 
+  // Enviar mensaje específico según el UID
+  String mensaje = "";
+  if (codigo == "83:3:7e:c") { // Formato esperado
+    Serial.println("Flor Guerra enviado");
+    mensaje = "Flor Guerra";
+  } else if (codigo == "c6:77:cc:2b") {
+    Serial.println("Anto Astudillo enviado");
+    mensaje = "Anto Astudillo";
+  } else {
+    if (codigo.length() > 0) {
+      Serial.println("UID desconocido, enviando código:");
+      mensaje = codigo; // Enviar el UID por defecto
+    }
+  }
+ 
+  if (mensaje.length() > 0) {
+    Wire.beginTransmission(8); // Dirección del esclavo (Arduino 2)
+    Wire.write(mensaje.c_str()); // Enviar el mensaje
+    Wire.endTransmission();
+    Serial.println(mensaje);
+  }
+ 
+  delay(1000); // Esperar antes de intentar leer otra tarjeta
+}
 
   Serial.println("Lista de asistencia restablecida"); 
 
