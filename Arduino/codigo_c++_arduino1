@@ -1,525 +1,482 @@
-* Codigo para la matriz led, conexion serial y modulo de Bluetooth.
-#include <FrequencyTimer2.h> 
-
+//CODIGO PARA MATRIZ LED, CONEXION SERIAL Y MODULO DE BLUETOOTH
+#include <Wire.h>
+#include <FrequencyTimer2.h>
+#include <avr/pgmspace.h>
+const uint8_t PROGMEM patterns[24][8][8] = {
+    {//t
+        {0, 0, 0, 0, 0, 0, 0, 0},
+        {1, 1, 1, 1, 1, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0}
+    },
+ {  //u
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {0, 1, 1, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {//b
+    {0, 0, 0, 0, 0, 0, 0, 0},
+     {1, 1, 1, 0, 0, 0, 0, 0},  
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 1, 1, 0, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 1, 1, 1, 0, 0, 0, 0},  
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {//i
+{0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {//r
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 1, 1, 1, 0, 0, 0, 0},
+    {1, 0, 1, 0, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {//e
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 0, 0, 0, 0, 0},
+    {1, 0, 0, 0, 0, 0, 0, 0},
+    {1, 1, 1, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {//n
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 1, 0, 1, 0, 0, 0, 0},
+    {1, 0, 1, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {1, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  //emojis
+  {//feliz
+{1, 1, 1, 1, 1, 1, 1, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 1, 1, 0, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 1, 1, 1, 1, 1, 1, 1}
  
-
-#define T { \ 
-
-     {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 1, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+  },
  
-
-#define E { \ 
-
-     {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 0, 0, 0, 0}, \ 
-
-     {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+  {//triste
+{1, 1, 1, 1, 1, 1, 1, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 0, 1, 1, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 1, 1, 1, 1, 1, 1, 1}
+  },
+  {//serio
+{1, 1, 1, 1, 1, 1, 1, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0,1, 1, 1, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 1, 1, 1, 1, 1, 1, 1}
  
-
-#define L { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+  },
+  {//enojado
+{1, 1, 1, 1, 1, 1, 1, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 1, 0, 0, 1, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 0, 0,1, 1, 0, 0, 1},
+{1, 0, 0, 1, 1, 0, 0, 1},
+{1, 0, 0, 0, 0, 0, 0, 1},
+{1, 1, 1, 1, 1, 1, 1, 1}
+  },
+  //numeros
+{//uno
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0}
+},
+{//dos
+    {0, 0, 0, 1, 1, 0, 0, 0},
+    {0, 0, 1, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 0, 1, 1, 1, 1, 0, 0}
+},
+{//tres
+    {0, 0, 0, 1, 1, 1, 0, 0},
+    {0, 0, 1, 0, 0, 0, 1, 0},
+    {0, 0, 0, 0, 0, 0, 1, 0},  
+    {0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 0, 0, 0, 0, 0, 1, 0},  
+    {0, 0, 0, 0, 0, 0, 1, 0},
+    {0, 0, 1, 0, 0, 0, 1, 0},
+    {0, 0, 0, 1, 1, 1, 0, 0}
+},
+{//cuatro
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 1, 1, 0, 0},
+    {0, 0, 0, 1, 0, 1, 0, 0},
+    {0, 0, 1, 0, 0, 1, 0, 0},
+    {0, 0, 1, 1, 1, 1, 1, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},  
+    {0, 0, 0, 0, 0, 1, 0, 0}
+},
+{//cinco
+    {0, 0, 1, 1, 1, 1, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},  
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0} ,
+    {0, 0, 1, 1, 1, 0, 0, 0}
+   
+},
+{//seis
+    {0, 0, 1, 1, 1, 1, 0, 0},
+    {0, 1, 0, 0, 0, 0, 0, 0},
+    {0, 1, 0, 0, 0, 0, 0, 0},
+    {0, 1, 1, 1, 1, 1, 0, 0},
+    {0, 1, 0, 0, 0, 0, 1, 0},
+    {0, 1, 0, 0, 0, 0, 1, 0},  
+    {0, 1, 0, 0, 0, 0, 1, 0},
+    {0, 0, 1, 1, 1, 1, 0, 0}
+},
+{//siete  
+    {0, 1, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},  
+    {0, 0, 0, 0, 1, 0, 0, 0},
+    {0, 0, 0, 1, 0, 0, 0, 0},
+    {0, 0, 1, 0, 0, 0, 0, 0},
+    {0, 1, 0, 0, 0, 0, 0, 0},
+    {0, 1, 0, 0, 0, 0, 0, 0}
+},
+{//ocho
+   
+    {0, 0, 1, 1, 1, 0, 0, 0},
+    {0, 1, 0, 0, 0, 1, 0, 0},  
+    {0, 1, 0, 0, 0, 1, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0},
+    {0, 1, 0, 0, 0, 1, 0, 0},
+    {0, 1, 0, 0, 0, 1, 0, 0},
+    {0, 1, 0, 0, 0, 1, 0, 0},
+    {0, 0, 1, 1, 1, 0, 0, 0}
+},
+{//nueve
+     
+    {0, 0, 1, 1, 1, 1, 0, 0},
+    {0, 0, 1, 0, 0, 1, 0, 0},
+    {0, 0, 1, 1, 1, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0},
+    {0, 0, 0, 0, 0, 1, 0, 0}
+},
+//ENTRETENIMIENTO
+{//calabera
+{0, 0, 0, 0, 0, 0, 0, 0},
+{0, 0, 1, 1, 1, 0, 0, 0},
+{0, 1, 1, 1, 1, 1, 0, 0},
+{0, 1, 0, 1, 0, 1, 0, 0},
+{0, 1, 1, 1, 1, 1, 0, 0},
+{0, 0, 1, 1, 1, 0, 0, 0},
+{0, 0, 1, 0, 1, 0, 0, 0},
+{0, 0, 0, 0, 0, 0, 0, 0}
  
-
-#define U { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+},
+{//volador
+{0, 0, 0, 0, 1, 0, 0, 0},
+{0, 0, 0, 1, 0, 1, 0, 0},
+{0, 0, 1, 0, 0, 0, 1, 0},
+{0, 0, 1, 0, 1, 0, 1, 0},
+{0, 1, 1, 1, 1, 1, 1, 1},
+{0, 1, 1, 1, 1, 1, 1, 1},
+{0, 0, 1, 0, 1, 0, 1, 0},
+{0, 1, 0, 0, 1, 0, 0, 1}
  
-
-#define B { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-     {1, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 0, 0, 0, 0},  \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+},
+{//
+{0, 0, 1, 0, 0, 0, 1, 0},
+{0, 0, 0, 1, 0, 1, 0, 0},
+{0, 0, 0, 1, 0, 1, 0, 0},
+{0, 0, 0, 0, 1, 0, 0, 0},
+{0, 0, 0, 1, 1, 1, 0, 0},
+{0, 0, 1, 0, 1, 0, 1, 0},
+{0, 1, 1, 1, 1, 1, 1, 1},
+{0, 0, 1, 1, 0, 1, 1, 0}
  
-
-#define I { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 1, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 1, 1, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+},
+{//
+{0, 0, 1, 0, 0, 0, 1, 0},
+{0, 1, 0, 0, 0, 0, 0, 1},
+{0, 1, 0, 0, 0, 0, 0, 1},
+{0, 0, 1, 1, 1, 1, 1, 0},
+{0, 0, 1, 0, 1, 0, 1, 0},
+{0, 0, 1, 1, 1, 1, 1, 0},
+{0, 0, 1, 1, 0, 1, 1, 0},
+{0, 0, 1, 0, 0, 0, 1, 0}
  
-
-#define S { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 1, 1, 1, 0, 0, 0, 0}, \ 
-
-    {1, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {1, 1, 1, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+}
  
-
-#define CORAZON { \ 
-
-{0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-{0, 1, 0, 0, 0, 1, 0, 0}, \ 
-
-{1, 1, 1, 0, 1, 1, 1, 0}, \ 
-
-{1, 1, 1, 1, 1, 1, 1, 0}, \ 
-
-  {0, 1, 1, 1, 1, 1, 0, 0}, \ 
-
-  {0, 0, 1, 1, 1, 0, 0, 0}, \ 
-
-  {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-  {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+};
+const int MAX_MESSAGES = 10;           // Máximo número de mensajes únicos a almacenar
+String receivedMessages[MAX_MESSAGES]; // Arreglo para almacenar los mensajes únicos
+int messageCount = 0;                  // Contador de mensajes almacenados
+//matriz
+byte col = 0;
+byte leds[8][8];
+int pins[17] = {-1, 5, 4, 3, 2, 14, 15, 16, 17, 13, 12, 11, 10, 9, 8, 7, 6};
+int cols[8] = {pins[13], pins[3], pins[4], pins[10], pins[6], pins[11], pins[15], pins[16]};
+int rows[8] = {pins[9], pins[14], pins[8], pins[12], pins[1], pins[7], pins[2], pins[5]};
+int pattern = 0;
  
-
-//fjhbdbf 
-
-#define D { \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 1, 0, 0, 0, 0} \ 
-
-} 
-
+void setup() {
+  Wire.begin(8); // Inicializa como esclavo con dirección 8
+  Wire.onReceive(receiveEvent); // Configura una función que se llamará cuando llegue un dato
+  Serial.begin(9600); // Comunicación con el monitor serial
+for (int i = 1; i <= 16; i++) {
+        pinMode(pins[i], OUTPUT);
+    }
  
-
-#define F { \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 0, 0, 1, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 1, 1, 1, 1, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0}, \ 
-
-    {0, 0, 0, 0, 0, 0, 0, 0} \ 
-
-} 
-
+    for (int i = 1; i <= 8; i++) {
+        digitalWrite(cols[i - 1], HIGH);
+    }
  
-
-////////////////////7774  
-
+    for (int i = 1; i <= 8; i++) {
+        digitalWrite(rows[i - 1], HIGH);
+    }
+    clearLeds();
+    FrequencyTimer2::disable();
+    FrequencyTimer2::setPeriod(2000);
+    FrequencyTimer2::setOnOverflow(display);
+    setPattern(pattern);
  
-
-#define FIGURE_1 { \ 
-
-{0,0,0,0,0,0,0,0}, \ 
-
-{0,1,0,0,0,0,1,0}, \ 
-
-{1,0,1,0,0,1,0,1}, \ 
-
-{0,1,1,1,1,1,1,0}, \ 
-
-{0,0,1,1,1,1,0,0}, \ 
-
-{0,1,0,1,1,0,1,0}, \ 
-
-{1,0,0,0,0,0,0,1}, \ 
-
-{0,0,0,0,0,0,0,0} \ 
-
-}  
-
+}
+void loop() {
+  // Verificar si hay datos disponibles desde el Bluetooth
+  if (Serial.available() > 0) { // Usa `Serial` si no tienes `Serial1`
+    char command = Serial.read(); // Leer el comando recibido
+    processCommand(command);      // Procesar el comando
+  }
  
-
-#define FIGURE_2 { \ 
-
-{0,0,0,0,0,0,0,0}, \ 
-
-{0,0,1,1,1,1,0,0}, \ 
-
-{0,1,0,0,0,0,1,0}, \ 
-
-{0,0,1,1,1,1,1,0}, \ 
-
-{0,0,1,0,1,0,1,0}, \ 
-
-{0,0,1,1,1,1,1,0}, \ 
-
-{0,1,1,0,0,0,1,1}, \ 
-
-{0,0,0,0,0,0,0,0} \ 
-
-}  
-
+}
  
-
-#define FIGURE_3 { \ 
-
-{0,0,0,0,0,0,0,0}, \ 
-
-{0,1,0,0,0,0,0,1}, \ 
-
-{0,0,1,1,1,1,1,0}, \ 
-
-{0,0,1,0,1,0,1,0}, \ 
-
-{0,0,1,1,1,1,1,0}, \ 
-
-{0,1,1,1,1,1,1,1}, \ 
-
-{0,0,1,0,0,0,1,0}, \ 
-
-{0,0,0,0,0,0,0,0} \ 
-
-}  
-
+// Función para manejar los datos recibidos por I2C
+void receiveEvent(int bytes) {
+  String receivedMessage = ""; // Variable para almacenar el mensaje recibido
  
-
-#define FIGURE_4 { \ 
-
-{0,0,0,0,0,0,0,0}, \ 
-
-{0,0,1,1,1,1,0,0}, \ 
-
-{0,1,0,0,0,0,1,0}, \ 
-
-{0,1,0,0,0,0,1,0}, \ 
-
-{0,1,0,1,1,0,1,0}, \ 
-
-{1,1,1,1,1,1,1,1}, \ 
-
-{0,1,0,0,0,0,1,0}, \ 
-
-{0,0,0,0,0,0,0,0} \ 
-
-}  
-
+  // Leer todos los bytes recibidos
+  while (Wire.available()) {
+    char c = Wire.read();       // Leer cada carácter recibido
+    receivedMessage += c;       // Agregar el carácter al mensaje recibido
+  }
  
-
-char entrada; 
-
-byte col = 0; 
-
-byte leds[8][8]; 
-
-int pins[17] = {-1, 5, 4, 3, 2, 14, 15, 16, 17, 13, 12, 11, 10, 9, 8, 7, 6}; 
-
-int cols[8] = {pins[13], pins[3], pins[4], pins[10], pins[6], pins[11], pins[15], pins[16]}; 
-
-int rows[8] = {pins[9], pins[14], pins[8], pins[12], pins[1], pins[7], pins[2], pins[5]}; 
-
-const int numPatterns = 14;  
-
-byte patterns[numPatterns][8][8] = {T,E,L,U,B,I,S,CORAZON, D, F, FIGURE_1,FIGURE_2,FIGURE_3,FIGURE_4};  
-
-int pattern = 0; 
-
+  // Eliminar caracteres adicionales (espacios, saltos de línea)
+  receivedMessage.trim();
  
-
-void setup() { 
-
-    Serial.begin(9600); 
-
-    for (int i = 1; i <= 16; i++) { 
-
-        pinMode(pins[i], OUTPUT); 
-
-    } 
-
-    for (int i = 1; i <= 8; i++) { 
-
-        digitalWrite(cols[i - 1], HIGH); 
-
-    } 
-
-    for (int i = 1; i <= 8; i++) { 
-
-        digitalWrite(rows[i - 1], HIGH); 
-
-    } 
-
-    clearLeds(); 
-
-    FrequencyTimer2::disable(); 
-
-    FrequencyTimer2::setPeriod(2000); 
-
-    FrequencyTimer2::setOnOverflow(display); 
-
-    setPattern(pattern); 
-
-} 
-
+  // Verificar que el mensaje no esté vacío y no esté ya almacenado
+  if (receivedMessage.length() > 0 && !messageExists(receivedMessage)) {
+    Serial.println(receivedMessage); // Imprimir el mensaje único
  
-
-void loop() { 
-
-    if (Serial.available() > 0) { 
-
-        entrada = Serial.read(); 
-
-    } 
-
-    if (entrada == 'C') { 
-
-        slidePattern(7,380); 
-
-        slidePattern(0, 380); 
-
-        slidePattern(1, 380); 
-
-        slidePattern(2, 380); 
-
-         slidePattern(1, 380); 
-
-      slidePattern(0, 380); 
-
-      slidePattern(3, 380); 
-
-      slidePattern(4, 380); 
-
-      slidePattern(4, 380); 
-
-      slidePattern(5, 380); 
-
-      slidePattern(6, 380); 
-
-      slidePattern(7, 380); 
-
+    // Guardar el mensaje si hay espacio en el arreglo
+    if (messageCount < MAX_MESSAGES) {
+      receivedMessages[messageCount] = receivedMessage; // Guardarlo en el arreglo
+      messageCount++;                                   // Incrementar el contador de mensajes
+    } else {
+      Serial.println("Arreglo lleno, no se pueden guardar más mensajes."); // Mensaje si se supera el límite
+    }
+  }
+}
  
-
-    } else if (entrada == 'D') { 
-
-        slidePattern(8, 300); 
-
-    } else if (entrada == 'F') { 
-
-        slidePattern(9, 300); 
-
-    } else if (entrada == 'G') { 
-
-        slidePattern(10, 300); 
-
-        slidePattern(11, 300); 
-
-        slidePattern(12, 300); 
-
-        slidePattern(13, 300); 
-
-    } 
-
-} 
-
+// Función para procesar los comandos recibidos por Bluetooth
  
-
-void clearLeds() { 
-
-    for (int i = 0; i < 8; i++) { 
-
-        for (int j = 0; j < 8; j++) { 
-
-            leds[i][j] = 0; 
-
-        } 
-
-    } 
-
-} 
-
+char currentCommand = '\0'; // Variable global para almacenar el comando activo
  
-
-void setPattern(int pattern) { 
-
-    for (int i = 0; i < 8; i++) { 
-
-        for (int j = 0; j < 8; j++) { 
-
-            leds[i][j] = patterns[pattern][i][j]; 
-
-        } 
-
-    } 
-
-} 
-
+void processCommand(char command) {
+  currentCommand = command; // Actualiza el comando activo
+  delay(50);
+  switch (command) {
+    case 'C':
+      while (currentCommand == 'C') { // Repite hasta que cambie el comando
+        slidePattern(0, 380);
+        slidePattern(1, 380);
+        slidePattern(2, 380);
+        slidePattern(3, 380);
+        slidePattern(0, 380);
+        slidePattern(4, 380);
+        slidePattern(5, 380);
+        slidePattern(6, 380);
  
-
-void slidePattern(int pattern, int del) { 
-
-    for (int l = 0; l < 8; l++) { 
-
-        for (int i = 0; i < 7; i++) { 
-
-            for (int j = 0; j < 8; j++) { 
-
-                leds[j][i] = leds[j][i + 1]; 
-
-            } 
-
-        } 
-
-        for (int j = 0; j < 8; j++) { 
-
-            leds[j][7] = patterns[pattern][j][l]; 
-
-        } 
-
-        delay(del); 
-
-    } 
-
-} 
-
+        if (Serial.available() > 0) { // Verificar si hay un nuevo comando
+          char newCommand = Serial.read();
+          currentCommand = newCommand; // Actualizar el comando activo
+          processCommand(newCommand); // Procesarlo
+          return; // Salir del caso actual
+        }
+      }
+      break;
+    case 'D':
+   
+      while (currentCommand == 'D') { // Repite hasta que cambie el comando
+        slidePattern(7, 380);
+        slidePattern(8, 380);
+        slidePattern(9, 380);
+        slidePattern(10, 380);
  
-
-void display() { 
-
-    digitalWrite(cols[col], HIGH); 
-
-    col++; 
-
-    if (col == 8) { 
-
-        col = 0; 
-
-    } 
-
-    for (int row = 0; row < 8; row++) { 
-
-        if (leds[col][7 - row] == 1) { 
-
-            digitalWrite(rows[row], HIGH); 
-
-        } else { 
-
-            digitalWrite(rows[row], LOW); 
-
-        } 
-
-    } 
-
-    digitalWrite(cols[col], LOW); 
-
-} 
-
+ 
+        if (Serial.available() > 0) { // Verificar si hay un nuevo comando
+          char newCommand = Serial.read();
+          currentCommand = newCommand; // Actualizar el comando activo
+          processCommand(newCommand); // Procesarlo
+          return; // Salir del caso actual
+        }
+      }
+      break;
+    case 'F':
+     
+      while (currentCommand == 'F') { // Repite hasta que cambie el comando
+        slidePattern(11, 380);
+        slidePattern(12, 380);
+        slidePattern(13, 380);
+        slidePattern(14, 380);
+        slidePattern(15, 380);
+        slidePattern(16, 380);
+        slidePattern(17, 380);
+        slidePattern(18, 380);
+        slidePattern(19, 380);
+ 
+        if (Serial.available() > 0) { // Verificar si hay un nuevo comando
+          char newCommand = Serial.read();
+          currentCommand = newCommand; // Actualizar el comando activo
+          processCommand(newCommand); // Procesarlo
+          return; // Salir del caso actual
+        }
+      }
+      break;
+    case 'G':
+     
+      while (currentCommand == 'G') { // Repite hasta que cambie el comando
+        slidePattern(20, 380);
+        slidePattern(21, 380);
+        slidePattern(22, 380);
+        slidePattern(23, 380);
+ 
+ 
+        if (Serial.available() > 0) { // Verificar si hay un nuevo comando
+          char newCommand = Serial.read();
+          currentCommand = newCommand; // Actualizar el comando activo
+          processCommand(newCommand); // Procesarlo
+          return; // Salir del caso actual
+        }
+      }
+      break;
+    case 'R':
+      resetMemory();
+      currentCommand = '\0'; // Reiniciar el comando actual
+      break;
+  }
+}
+// Función para verificar si un mensaje ya existe en el arreglo
+bool messageExists(const String &message) {
+  // Recorrer el arreglo y verificar si el mensaje ya existe
+  for (int i = 0; i < messageCount; i++) {
+    if (receivedMessages[i] == message) {
+      return true; // El mensaje ya existe
+    }
+  }
+  return false; // El mensaje no existe
+}
+void resetMemory() {
+  messageCount = 0; // Reiniciar el contador de mensajes
+ 
+}
+void clearLeds() {
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            leds[i][j] = 0;
+        }
+    }
+}
+ 
+ 
+ void setPattern(int pattern) {
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      leds[i][j] = pgm_read_byte(&(patterns[pattern][i][j]));
+    }
+  }
+}
+ 
+void slidePattern(int pattern, int del) {
+  for (int l = 0; l < 8; l++) {
+    for (int i = 0; i < 7; i++) {
+      for (int j = 0; j < 8; j++) {
+        leds[j][i] = leds[j][i + 1];
+      }
+    }
+    for (int j = 0; j < 8; j++) {
+      leds[j][7] = pgm_read_byte(&(patterns[pattern][j][l]));
+    }
+    delay(del);
+ 
+  }
+}
+ 
+ 
+ 
+ 
+void display() {
+    digitalWrite(cols[col], HIGH);
+    col++;
+    if (col == 8) {
+        col = 0;
+    }
+    for (int row = 0; row < 8; row++) {
+        if (leds[col][7 - row] == 1) {
+            digitalWrite(rows[row], HIGH);
+        } else {
+            digitalWrite(rows[row], LOW);
+        }
+    }
+    digitalWrite(cols[col], LOW);
+ 
+}
