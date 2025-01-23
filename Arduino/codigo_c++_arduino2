@@ -37,12 +37,12 @@ void loop() {
   if (codigo == "83:3:7e:c") { // Formato esperado
     Serial.println("Flor Guerra enviado");
     mensaje = "Flor Guerra";
-  } else if (codigo == "c6:77:cc:2b") {
+  } else if (codigo == "89:97:3a:a4") {
     Serial.println("Anto Astudillo enviado");
     mensaje = "Anto Astudillo";
   } else {
     if (codigo.length() > 0) {
-      Serial.println("UID desconocido, enviando código:");
+      Serial.println("UID desconocido, enviando código:" + codigo);
       mensaje = codigo; // Enviar el UID por defecto
     }
   }
@@ -56,7 +56,5 @@ void loop() {
  
   delay(1000); // Esperar antes de intentar leer otra tarjeta
 }
-
-  Serial.println("Lista de asistencia restablecida"); 
-
-} 
+ 
+ 
