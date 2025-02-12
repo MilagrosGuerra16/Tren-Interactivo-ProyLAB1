@@ -1,4 +1,4 @@
-************AHORA TIENE UN ARCHIVO DE LAS IMAGENES DE TODO EL PROCESO PQ EL PROTOTIPO NO ESTA TERMINADO*********
+
 # Descripción del Entregable
 Enlace a un video tutorial que explica el proceso paso a paso para armar el tren del proyecto.
 
